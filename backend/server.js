@@ -1,33 +1,50 @@
+const dotenv = require("dotenv");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const dotenv = require('dotenv');
+
+const errorMiddleware = require("./middleware/error");
+
+// Handling Uncaught Exception
+process.on("uncaughtException", (err) => {
+  console.log(`Error: ${err.message}`);
+  console.log(`Shutting down the server due to Uncaught Exception`);
+  process.exit(1);
+});
 
 // Config
-dotenv.config({path:'backend/config/config.env'});
+dotenv.config({ path: "backend/config/config.env" });
+const PORT = process.env.PORT;
 
-// middleware
-app.use(express.json());
-//app.use(cookieParser());
-//app.use(bodyParser.urlencoded({ extended: true}));
+// Middleware
 app.use(bodyParser.json());
 app.use(cors());
+// apiRouter.use(cookieParser());
+app.use(cookieParser());
 // app.use(cors({
 //   origin: 'http://localhost:3001',
 //   credentials: true
 // }));
 
 // Route imports
-const apiRouter = require("./routes/apiRoute");
-apiRouter.use(cookieParser());
-app.use("/apiRouter", apiRouter);
+const user = require("./routes/userRoute");
+app.use("/api/v1", user);
 
-const PORT = process.env.PORT;
+// Middleware for Errors
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
   console.log(`server is listening  on http://localhost:${PORT}`);
 });
 
-module.exports = app;
+// Unhandled Promise Rejection
+process.on("unhandledRejection", (err) => {
+  console.log(`Error: ${err.message}`);
+  console.log(`Shutting down the server due to Unhandled Promise Rejection`);
+
+  server.close(() => {
+    process.exit(1);
+  });
+});

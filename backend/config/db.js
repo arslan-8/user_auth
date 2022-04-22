@@ -14,9 +14,10 @@ const pool = mysql.createPool({
 // pool.query('CREATE TABLE User (' +
 //       'id int(11) NOT NULL AUTO_INCREMENT,' +
 //       'user_name varchar(255) NOT NULL,' +
-//       'role varchar(255) default "employee",' +
+//       'role varchar(255) DEFAULT "user",' +
 //       'email varchar(255) NOT NULL,' +
 //       'password varchar(255) NOT NULL,' +
+//       'token varchar(255) DEFAULT NULL,' +
 //       'PRIMARY KEY (id),'+
 //       'UNIQUE KEY email_UNIQUE (email),' +
 //       'UNIQUE KEY password_UNIQUE (password))', function (err, result) {
@@ -25,14 +26,13 @@ const pool = mysql.createPool({
 //         }
 //      );
 
-
 let db = {};
 
 // ***Requests to the User table ***
 
 db.allUser = () => {
   return new Promise((resolve, reject) => {
-    pool.query("SELECT * FROM User ", (error, users) => {
+    pool.query("SELECT * FROM User", (error, users) => {
       if (error) {
         return reject(error);
       }
@@ -46,6 +46,32 @@ db.getUserByEmail = (email) => {
     pool.query(
       "SELECT * FROM User WHERE email = ?",
       [email],
+      (error, users) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve(users[0]);
+      }
+    );
+  });
+};
+
+db.getUserById = (id) => {
+  return new Promise((resolve, reject) => {
+    pool.query("SELECT * FROM User WHERE id = ?", [id], (error, users) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve(users[0]);
+    });
+  });
+};
+
+db.getUserByToken = (token) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "SELECT * FROM User WHERE token = ?",
+      [token],
       (error, users) => {
         if (error) {
           return reject(error);
@@ -83,6 +109,22 @@ db.updateUser = (userName, role, email, password, id) => {
         }
 
         return resolve();
+      }
+    );
+  });
+};
+
+db.updateUserTokenOrPassword = (email, data) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      'UPDATE user SET ? WHERE email ="' + email + '"',
+      data,
+      (error, users) => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(users[0]);
       }
     );
   });

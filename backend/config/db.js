@@ -13,11 +13,12 @@ const pool = mysql.createPool({
 
 // pool.query('CREATE TABLE User (' +
 //       'id int(11) NOT NULL AUTO_INCREMENT,' +
-//       'user_name varchar(255) NOT NULL,' +
-//       'role varchar(255) DEFAULT "user",' +
+//       'name varchar(255) NOT NULL,' +
+//       'role varchar(255) DEFAULT "user",' +rs
 //       'email varchar(255) NOT NULL,' +
 //       'password varchar(255) NOT NULL,' +
 //       'token varchar(255) DEFAULT NULL,' +
+//       'token_expire varchar(255) DEFAULT NULL,' +
 //       'PRIMARY KEY (id),'+
 //       'UNIQUE KEY email_UNIQUE (email),' +
 //       'UNIQUE KEY password_UNIQUE (password))', function (err, result) {
@@ -82,11 +83,11 @@ db.getUserByToken = (token) => {
   });
 };
 
-db.insertUser = (userName, email, password) => {
+db.insertUser = (name, email, password) => {
   return new Promise((resolve, reject) => {
     pool.query(
-      "INSERT INTO User (user_name, email, password) VALUES (?,  ?, ?)",
-      [userName, email, password],
+      "INSERT INTO User (name, email, password) VALUES (?,  ?, ?)",
+      [name, email, password],
       (error, result) => {
         if (error) {
           return reject(error);
@@ -98,11 +99,27 @@ db.insertUser = (userName, email, password) => {
   });
 };
 
-db.updateUser = (userName, role, email, password, id) => {
+db.insertUserAdmin = (name, email, password, role) => {
   return new Promise((resolve, reject) => {
     pool.query(
-      "UPDATE User SET user_name = ?, role= ?, email= ?, password=? WHERE id = ?",
-      [userName, role, email, password, id],
+      "INSERT INTO User (name, role, email, password) VALUES (?, ?, ?, ?)",
+      [name, role, email, password],
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(result.insertId);
+      }
+    );
+  });
+};
+
+db.updateUser = (name, role, email, password, id) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "UPDATE User SET name = ?, role= ?, email= ?, password=? WHERE id = ?",
+      [name, role, email, password, id],
       (error) => {
         if (error) {
           return reject(error);
@@ -136,7 +153,7 @@ db.deleteUser = (id) => {
       if (error) {
         return reject(error);
       }
-      return resolve(console.log("User deleted"));
+      return resolve(console.log('user deleted'));
     });
   });
 };

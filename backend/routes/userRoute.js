@@ -14,34 +14,35 @@ const {
   getSingleUser,
   updateUserRole,
   deleteUser,
-  resetPasswordTokenEmail,
-  resetPassword,
+  resetPasswordTokenToEmail,
+  resetPasswordByToken,
 } = require("../controllers/userController");
+
+// Routes without authentication
 
 router.route("/register").post(registerUser);
 
 router.route("/login").post(loginUser);
 
-// router.route("/password/forgot").post(forgotPassword);
-
-// router.route("/password/reset/:token").put(resetPassword);
-
 router.route("/logout").get(logout);
 
-router
-  .route("/password/reset")
-  .post(resetPasswordTokenEmail)
-  .put(resetPassword);
+router.route("/password/reset").post(resetPasswordTokenToEmail);
+
+router.route("/password/reset/:token").put(resetPasswordByToken);
+
+// Authenticated Routes
 
 router.route("/me").get(isAuthenticatedUser, getUserDetails);
 
-// router.route("/password/update").put(isAuthenticatedUser, updatePassword);
-
 router.route("/me/update").put(isAuthenticatedUser, updateProfile);
+
+// Authorized Routes
 
 router
   .route("/admin/users")
-  .get(isAuthenticatedUser, authorizeRoles("admin"), getAllUser)
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getAllUser);
+router
+  .route("/admin/user")
   .post(isAuthenticatedUser, authorizeRoles("admin"), createUser);
 
 router

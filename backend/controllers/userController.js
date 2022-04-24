@@ -1,4 +1,3 @@
-const jsonwebtoken = require("jsonwebtoken");
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const randtoken = require("rand-token");
 
@@ -12,13 +11,15 @@ const { getUserByToken } = require("../config/db");
 // Register user
 exports.registerUser = async (req, res, next) => {
   try {
-    const userName = req.body.userName;
+    const name = req.body.name;
     const email = req.body.email;
     let password = req.body.password;
-    const confirmPassword = req.body.password;
+    const confirmPassword = req.body.confirmPassword;
 
-    if (!userName || !email || !password || confirmPassword) {
-      return res.sendStatus(400);
+    if (!name || !email || !password || !confirmPassword) {
+      return next(
+        new ErrorHandler("Please provide all the required fields", 400)
+      );
     }
 
     if (password !== confirmPassword) {
@@ -36,7 +37,7 @@ exports.registerUser = async (req, res, next) => {
     const salt = genSaltSync(10);
     password = hashSync(password, salt);
 
-    const user = await db.insertUser(userName, email, password);
+    const user = await db.insertUser(name, email, password);
 
     sendToken(user, 201, res);
 
@@ -52,7 +53,7 @@ exports.loginUser = async (req, res, next) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    user = await db.getUserByEmail(email);
+    const user = await db.getUserByEmail(email);
 
     if (!user) {
       return res.json({
@@ -89,7 +90,7 @@ exports.logout = async (req, res, next) => {
 };
 
 // Generate and send reset password token to email
-exports.resetPasswordTokenEmail = async (req, res, next) => {
+exports.resetPasswordTokenToEmail = async (req, res, next) => {
   var email = req.body.email;
 
   const user = await db.getUserByEmail(email);
@@ -113,8 +114,13 @@ exports.resetPasswordTokenEmail = async (req, res, next) => {
       return next(new ErrorHandler(error.message, 500));
     }
 
+    const date = new Date(Date.now());
+
+    date.setMinutes(date.getMinutes() + 30);
+
     let data = {
       token: resetToken,
+      token_expire: date,
     };
 
     await db.updateUserTokenOrPassword(email, data);
@@ -132,18 +138,35 @@ exports.resetPasswordTokenEmail = async (req, res, next) => {
 };
 
 // update password to database
-exports.resetPassword = async (req, res, next) => {
-  const token = req.body.token;
+exports.resetPasswordByToken = async (req, res, next) => {
+  const token = req.params.token;
   let password = req.body.password;
-  const confirmPassword = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
 
-  if (!token || !password) {
-    return res.sendStatus(400);
+  if (!token || !password || !confirmPassword) {
+    return next(
+      new ErrorHandler("Please provide all the required fields", 400)
+    );
   }
 
-  const user = await getUserByToken(token);
+  const user = await db.getUserByToken(token);
 
   if (!user) {
+    return next(
+      new ErrorHandler(
+        "Reset Password Token is invalid or has been expired",
+        400
+      )
+    );
+  }
+
+  const token_date = new Date(user.token_expire);
+
+  const now = new Date(Date.now());
+
+  const isExpired = token_date <= now;
+
+  if (isExpired) {
     return next(
       new ErrorHandler(
         "Reset Password Token is invalid or has been expired",
@@ -181,21 +204,21 @@ exports.getUserDetails = async (req, res, next) => {
 // Update a user
 exports.updateProfile = async (req, res, next) => {
   try {
-    const userName = req.body.userName;
+    const name = req.body.name;
     const email = req.body.email;
     let password = req.body.password;
 
     const role = req.user.role;
     const userId = req.user.id;
 
-    if (!userName || !role || !email || !password || !userId) {
+    if (!name || !role || !email || !password || !userId) {
       return res.sendStatus(400);
     }
 
     const salt = genSaltSync(10);
     password = hashSync(password, salt);
 
-    const user = await db.updateUser(userName, role, email, password, userId);
+    const user = await db.updateUser(name, role, email, password, userId);
     res.status(200).json({
       success: true,
       message: "User updated successfully",
@@ -212,12 +235,19 @@ exports.updateProfile = async (req, res, next) => {
 // Create a user -- Admin
 exports.createUser = async (req, res, next) => {
   try {
-    const userName = req.body.userName;
+    const name = req.body.name;
     const email = req.body.email;
     let password = req.body.password;
+    const confirmPassword = req.body.confirmPassword;
 
-    if (!userName || !email || !password) {
-      return res.sendStatus(400);
+    if (!name || !email || !password || !confirmPassword) {
+      return next(
+        new ErrorHandler("Please provide all the required fields", 400)
+      );
+    }
+
+    if (password !== confirmPassword) {
+      return next(new ErrorHandler("Password does not match", 400));
     }
 
     const getUser = await db.getUserByEmail(email);
@@ -231,7 +261,7 @@ exports.createUser = async (req, res, next) => {
     const salt = genSaltSync(10);
     password = hashSync(password, salt);
 
-    const user = await db.insertUser(userName, email, password);
+    const user = await db.insertUser(name, email, password);
     res.status(200).json({
       success: true,
       message: "User created successfully",
@@ -274,20 +304,28 @@ exports.getSingleUser = async (req, res, next) => {
 // Update user role/detail -- Admin
 exports.updateUserRole = async (req, res, next) => {
   try {
-    const userName = req.body.userName;
+    const name = req.body.name;
     const role = req.body.role;
     const email = req.body.email;
     let password = req.body.password;
     const userId = req.params.id;
 
-    if (!userName || !role || !email || !password) {
+    if (!name || !role || !email || !password) {
       return res.sendStatus(400);
+    }
+
+    const isUser = await db.getUserById(userId);
+
+    if (!isUser) {
+      return next(
+        new ErrorHandler(`User does not exist with Id: ${req.params.id}`)
+      );
     }
 
     const salt = genSaltSync(10);
     password = hashSync(password, salt);
 
-    const user = await db.updateUser(userName, role, email, password, userId);
+    const user = await db.updateUser(name, role, email, password, userId);
     res.status(200).json({
       success: true,
       message: "User updated successfully",
@@ -305,15 +343,25 @@ exports.updateUserRole = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    const user = await db.deleteUser(userId);
 
-    return res.status(204).json({
+    const user = await db.getUserById(userId);
+
+    if (!user) {
+      return next(
+        new ErrorHandler(`User does not exist with Id: ${req.params.id}`)
+      );
+    }
+
+    await db.deleteUser(userId);
+
+    res.status(204).json({
       success: true,
       message: "User deleted successfully",
     });
+  
   } catch (e) {
     console.log(e);
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: "Something went wrong",
     });

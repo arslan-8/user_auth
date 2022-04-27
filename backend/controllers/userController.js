@@ -6,7 +6,6 @@ const db = require("../config/db");
 const ErrorHandler = require("../utils/errorHandler");
 
 const sendEmail = require("../utils/sendEmail");
-const { getUserByToken } = require("../config/db");
 
 // Register user
 exports.registerUser = async (req, res, next) => {
@@ -29,9 +28,7 @@ exports.registerUser = async (req, res, next) => {
     const getUser = await db.getUserByEmail(email);
 
     if (getUser != null && getUser.email == email) {
-      return res.json({
-        message: "User already exists with this email address",
-      });
+      return next(new ErrorHandler("User already exists with this email address", 400));
     }
 
     const salt = genSaltSync(10);
@@ -56,9 +53,7 @@ exports.loginUser = async (req, res, next) => {
     const user = await db.getUserByEmail(email);
 
     if (!user) {
-      return res.json({
-        message: "Invalid email or password",
-      });
+      return next(new ErrorHandler("Invalid email or password", 400));
     }
 
     const isValidPassword = compareSync(password, user.password);
@@ -67,12 +62,10 @@ exports.loginUser = async (req, res, next) => {
 
       sendToken(user, 201, res);
     } else {
-      return res.json({
-        message: "Invalid email or password",
-      });
+      return next(new ErrorHandler("Invalid email or password", 400));
     }
   } catch (e) {
-    console.log(e);
+    return next(new ErrorHandler(e.message, 500));
   }
 };
 
@@ -95,12 +88,14 @@ exports.resetPasswordTokenToEmail = async (req, res, next) => {
 
   const user = await db.getUserByEmail(email);
 
-  if (user.email.length > 0) {
+  if (user) {
     var resetToken = randtoken.generate(20);
 
-    const resetPasswordUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/password/reset/${resetToken}`;
+    // const resetPasswordUrl = `${req.protocol}://${req.get(
+    //   "host"
+    // )}/api/v1/password/reset/${resetToken}`;
+
+    const resetPasswordUrl = `http://localhost:3000/password/reset/${resetToken}`;
 
     const message = `Your password reset token is :- \n\n ${resetPasswordUrl} \n\nIf you have not requested this email then, please ignore it `;
 
@@ -184,6 +179,8 @@ exports.resetPasswordByToken = async (req, res, next) => {
 
   let data = {
     password,
+    token: null,
+    token_expire: null,
   };
 
   const user2 = await db.updateUserTokenOrPassword(user.email, data);

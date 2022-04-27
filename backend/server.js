@@ -20,13 +20,19 @@ const PORT = process.env.PORT;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(cors());
+// app.use(cors({
+//   origin:'http://localhost:4000', 
+//     credentials:true,            //access-control-allow-credentials:true
+//     optionSuccessStatus:200
+// }));
+const corsOptions = {
+  origin: true, //included origin as true
+  credentials: true, //included credentials as true
+};
+app.use(cors(corsOptions));
 // apiRouter.use(cookieParser());
 app.use(cookieParser());
-// app.use(cors({
-//   origin: 'http://localhost:3001',
-//   credentials: true
-// }));
+
 
 // Route imports
 const user = require("./routes/userRoute");

@@ -26,7 +26,7 @@ router.route("/login").post(loginUser);
 
 router.route("/logout").get(logout);
 
-router.route("/password/reset").post(resetPasswordTokenToEmail);
+router.route("/password/forgot").post(resetPasswordTokenToEmail);
 
 router.route("/password/reset/:token").put(resetPasswordByToken);
 

@@ -115,11 +115,11 @@ db.insertUserAdmin = (name, email, password, role) => {
   });
 };
 
-db.updateUser = (name, role, email, password, id) => {
+db.updateUser = (name, role, email, id) => {
   return new Promise((resolve, reject) => {
     pool.query(
-      "UPDATE User SET name = ?, role= ?, email= ?, password=? WHERE id = ?",
-      [name, role, email, password, id],
+      "UPDATE User SET name = ?, role= ?, email= ? WHERE id = ?",
+      [name, role, email, id],
       (error) => {
         if (error) {
           return reject(error);

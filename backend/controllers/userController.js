@@ -304,10 +304,9 @@ exports.updateUserRole = async (req, res, next) => {
     const name = req.body.name;
     const role = req.body.role;
     const email = req.body.email;
-    let password = req.body.password;
     const userId = req.params.id;
 
-    if (!name || !role || !email || !password) {
+    if (!name || !role || !email) {
       return res.sendStatus(400);
     }
 
@@ -319,10 +318,7 @@ exports.updateUserRole = async (req, res, next) => {
       );
     }
 
-    const salt = genSaltSync(10);
-    password = hashSync(password, salt);
-
-    const user = await db.updateUser(name, role, email, password, userId);
+    const user = await db.updateUser(name, role, email, userId);
     res.status(200).json({
       success: true,
       message: "User updated successfully",

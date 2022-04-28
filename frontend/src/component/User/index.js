@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useEffect } from "react";
-import { clearErrors, logout, loadUser } from "../actions/userAction";
+import { clearErrors, logout, loadUser } from "../../actions/userAction";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "react-alert";
@@ -20,18 +20,9 @@ import Tab from "@mui/material/Tab";
 import Zoom from "@mui/material/Zoom";
 import Fab from "@mui/material/Fab";
 import EditIcon from "@mui/icons-material/Edit";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
-import Avatar from "@mui/material/Avatar";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import GroupIcon from "@mui/icons-material/Group";
-import Divider from "@mui/material/Divider";
-import Loader from "./Loader/Loader";
-
-import TextField from "@mui/material/TextField";
+import Loader from "../Loader/Loader";
+import MyProfile from "./MyProfile";
+import UpdateProfile from "./UpdateProfile";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -85,19 +76,21 @@ const User = () => {
   const { error, loading, isAuthenticated, user } = useSelector(
     (state) => state.user
   );
+  const [name, setName] = useState("");
+  const [email, setEmial] = useState("");
+  const [role, setRole] = useState("");
 
-  const useMountEffect = (fun) => useEffect(fun, [])
+  const useMountEffect = (fun) => useEffect(fun, []);
   useMountEffect(() => {
     if (isAuthenticated) {
       dispatch(loadUser());
     }
-  })
-
-  console.log("user", user);
-
-  const name = "name";
-  const email = "email";
-  const role = "role";
+    if (user) {
+      setName(user.name);
+      setEmial(user.email);
+      setRole(user.role);
+    }
+  });
 
   useEffect(() => {
     if (error) {
@@ -121,8 +114,31 @@ const User = () => {
 
     if (!updateName || !updateEmail || !updatePassword) {
       alert.error("Please provide all the fields");
+    } else {
+      validateEmail(updateEmail);
+      checkPassword(updatePassword);
     }
   };
+
+  function validateEmail(email) {
+    if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      return true;
+    }
+    alert.info("You have entered an invalid email address!");
+    return false;
+  }
+
+  function checkPassword(password) {
+    let passw = /^[A-Za-z]\w{7,14}$/;
+    if (password.match(passw)) {
+      return true;
+    } else {
+      alert.info(
+        "Password length (6-20) & it must contain one numeric digit, one uppercase and one lowercase letter"
+      );
+      return false;
+    }
+  }
 
   const theme = useTheme();
   const [value, setValue] = React.useState(0);
@@ -182,9 +198,13 @@ const User = () => {
             <Container maxWidth="sm">
               <Box
                 display="flex"
-                justifyContent="center"       
+                justifyContent="center"
                 sx={{ height: "60vh" }}
               >
+                {/* <Typography variant="h4" gutterBottom component="div">
+                  USER DETAILS
+                </Typography> */}
+
                 <Box
                   sx={{
                     mt: 20,
@@ -217,88 +237,17 @@ const User = () => {
                     onChangeIndex={handleChangeIndex}
                   >
                     <TabPanel value={value} index={0} dir={theme.direction}>
-                      <List
-                        sx={{
-                          width: "100%",
-                          maxWidth: 360,
-                          bgcolor: "background.paper",
-                        }}
-                      >
-                        <ListItem>
-                          <ListItemAvatar>
-                            <Avatar>
-                              <PersonIcon />
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText primary="Name" secondary={name} />
-                        </ListItem>
-                        <Divider variant="inset" component="li" />
-                        <ListItem>
-                          <ListItemAvatar>
-                            <Avatar>
-                              <EmailIcon />
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText primary="Email" secondary={email} />
-                        </ListItem>
-                        <Divider variant="inset" component="li" />
-                        <ListItem>
-                          <ListItemAvatar>
-                            <Avatar>
-                              <GroupIcon />
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText primary="Role" secondary={role} />
-                        </ListItem>
-                      </List>
+                      <MyProfile name={name} email={email} role={role} />
                     </TabPanel>
                     <TabPanel value={value} index={1} dir={theme.direction}>
-                      <Box
-                        component="form"
-                        onSubmit={handleSubmit}
-                        noValidate
-                        sx={{ width: "100%" }}
-                      >
-                        <TextField
-                          margin="normal"
-                          required
-                          fullWidth
-                          label="Name"
-                          id="updateName" 
-                          name="updateName"
-                          // autoFocus
-                          onChange={(e) => setUpdateName(e.target.value)}
-                        />
-                        <TextField
-                          margin="normal"
-                          required
-                          fullWidth
-                          label="Email"
-                          id="updateEmail"
-                          name="updateEmail"
-                          autoComplete="email"
-                          onChange={(e) => setUpdateEmail(e.target.value)}
-                        />
-                        <TextField
-                          margin="normal"
-                          required
-                          fullWidth
-                          label="Password"
-                          id="updatePassword"
-                          type="password"
-                          name="updatePasword"
-                          autoComplete="new-password"
-                          onChange={(e) => setUpdatePassword(e.target.value)}
-                        />
-                        <Button
-                          type="submit"
-                          fullWidth
-                          variant="contained"
-                          sx={{ mt: 3, mb: 2 }}
-                        >
-                          Update
-                        </Button>
-                      </Box>
+                      <UpdateProfile
+                        name={updateName}
+                        email={updateEmail}
+                        funcSubmit={handleSubmit}
+                        funcName={setUpdateName}
+                        funcEmail={setUpdateEmail}
+                        funcPassword={setUpdatePassword}
+                      />
                     </TabPanel>
                   </SwipeableViews>
                   {fabs.map((fab, index) => (

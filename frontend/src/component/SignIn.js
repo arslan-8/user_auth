@@ -146,10 +146,10 @@ const SignIn = () => {
 
   return (
     <Fragment>
-      {loading ? (
+      {/* {loading ? (
         <Loader />
       ) : (
-        <Fragment>
+        <Fragment> */}
           <ThemeProvider theme={theme}>
             <Container component="main" maxWidth="xs">
               <CssBaseline />
@@ -231,8 +231,8 @@ const SignIn = () => {
               <Copyright sx={{ mt: 8, mb: 4 }} />
             </Container>
           </ThemeProvider>
-        </Fragment>
-      )}
+        {/* </Fragment>
+      )} */}
     </Fragment>
   );
 };

@@ -29,24 +29,22 @@ const Admin = () => {
 
   // Get all users tab
 
-  const { error, loading, users } = useSelector((state) => state.userDetails);
+  // const { error, loading, users } = useSelector((state) => state.userDetails);
 
-  console.log("users:", users);
+  // console.log("users:", users);
 
-  useEffect(() => {
-    if (error) {
-      alert.error(error);
-      dispatch(clearErrors);
-    }
+  // useEffect(() => {
+  //   if (error) {
+  //     alert.error(error);
+  //     dispatch(clearErrors);
+  //   }
 
-    if (!loading) {
-      dispatch(getUserDetails());
-    }
+  //   dispatch(getUserDetails());
 
-    // if (isAuthenticated === false) {
-    //   navigate("/");
-    // }
-  }, [dispatch, error, navigate, alert]);
+  //   // if (isAuthenticated === false) {
+  //   //   navigate("/");
+  //   // }
+  // }, [dispatch, error, navigate, alert]);
 
   return (
     <Fragment>
@@ -85,7 +83,7 @@ const Admin = () => {
             <Typography variant="h5" gutterBottom component="div" mb={5}>
               USERS LIST
             </Typography>
-            <UserList users={users}/>
+            <UserList />
 
           </Box>
         </Container>

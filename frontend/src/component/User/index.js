@@ -1,5 +1,10 @@
 import React, { Fragment, useState, useEffect } from "react";
-import { clearErrors, logout, loadUser } from "../../actions/userAction";
+import {
+  clearErrors,
+  logout,
+  loadUser,
+  updateProfile,
+} from "../../actions/userAction";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "react-alert";
@@ -73,9 +78,12 @@ const User = () => {
 
   // My Profile Tab
 
-  const { error, loading, isAuthenticated, user } = useSelector(
+  const { isAuthenticated, user } = useSelector(
     (state) => state.user
   );
+
+  const { error, isUpdated, loading } = useSelector((state) => state.profile);
+
   const [name, setName] = useState("");
   const [email, setEmial] = useState("");
   const [role, setRole] = useState("");
@@ -98,15 +106,30 @@ const User = () => {
       dispatch(clearErrors);
     }
 
+    console.log('isupdated:', isUpdated)
+
+    if (isUpdated) {
+      alert.success("User Updated Successfully");
+      handleChangeIndex(0)
+    }
+
     // if (isAuthenticated === false) {
     //   navigate("/");
     // }
   }, [dispatch, error, alert, navigate]);
 
+  let user_name;
+  let user_email;
+
+  if (user) {
+    user_name = user.name;
+    user_email = user.email;
+  }
+
   // Update Profile Tab
 
-  const [updateName, setUpdateName] = useState("");
-  const [updateEmail, setUpdateEmail] = useState("");
+  const [updateName, setUpdateName] = useState(user_name);
+  const [updateEmail, setUpdateEmail] = useState(user_email);
   const [updatePassword, setUpdatePassword] = useState("");
 
   const handleSubmit = (event) => {
@@ -115,8 +138,12 @@ const User = () => {
     if (!updateName || !updateEmail || !updatePassword) {
       alert.error("Please provide all the fields");
     } else {
-      validateEmail(updateEmail);
-      checkPassword(updatePassword);
+      if (validateEmail(updateEmail)) {
+        if (checkPassword(updatePassword)) {
+          dispatch(updateProfile(updateName, updateEmail, updatePassword));
+          // handleChangeIndex(0)
+        }
+      }
     }
   };
 
@@ -171,112 +198,108 @@ const User = () => {
         <Loader />
       ) : (
         <Fragment>
-          <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
-              <Toolbar>
-                <IconButton
-                  size="large"
-                  edge="start"
-                  color="inherit"
-                  aria-label="menu"
-                  sx={{ mr: 2 }}
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  User
-                </Typography>
-                <Button color="inherit" onClick={logoutUser}>
-                  Logout
-                </Button>
-              </Toolbar>
-            </AppBar>
-          </Box>
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              User
+            </Typography>
+            <Button color="inherit" onClick={logoutUser}>
+              Logout
+            </Button>
+          </Toolbar>
+        </AppBar>
+      </Box>
 
-          <React.Fragment>
-            <CssBaseline />
-            <Container maxWidth="sm">
-              <Box
-                display="flex"
-                justifyContent="center"
-                sx={{ height: "60vh" }}
-              >
-                {/* <Typography variant="h4" gutterBottom component="div">
+      <React.Fragment>
+        <CssBaseline />
+        <Container maxWidth="sm">
+          <Box display="flex" justifyContent="center" sx={{ height: "65vh" }}>
+            {/* <Typography variant="h4" gutterBottom component="div">
                   USER DETAILS
                 </Typography> */}
 
-                <Box
-                  sx={{
-                    mt: 20,
-                    bgcolor: "background.paper",
-                    width: 500,
-                    position: "relative",
-                    minHeight: 200,
-                    border: 1,
-                    borderColor: "lightgrey",
-                    borderBottomLeftRadius: 15,
-                    borderBottomRightRadius: 15,
-                  }}
+            <Box
+              sx={{
+                mt: 20,
+                bgcolor: "background.paper",
+                width: 500,
+                position: "relative",
+                minHeight: 200,
+                border: 1,
+                borderColor: "lightgrey",
+                borderBottomLeftRadius: 15,
+                borderBottomRightRadius: 15,
+              }}
+            >
+              <AppBar position="static" color="default">
+                <Tabs
+                  value={value}
+                  onChange={handleChange}
+                  indicatorColor="primary"
+                  textColor="primary"
+                  variant="fullWidth"
+                  aria-label="action tabs example"
                 >
-                  <AppBar position="static" color="default">
-                    <Tabs
-                      value={value}
-                      onChange={handleChange}
-                      indicatorColor="primary"
-                      textColor="primary"
-                      variant="fullWidth"
-                      aria-label="action tabs example"
-                    >
-                      <Tab label="My Profile" {...a11yProps(0)} />
-                      <Tab label="Update Profile" {...a11yProps(1)} />
-                    </Tabs>
-                  </AppBar>
-                  <SwipeableViews
-                    axis={theme.direction === "rtl" ? "x-reverse" : "x"}
-                    index={value}
-                    onChangeIndex={handleChangeIndex}
+                  <Tab label="My Profile" {...a11yProps(0)} />
+                  <Tab label="Update Profile" {...a11yProps(1)} />
+                </Tabs>
+              </AppBar>
+              <SwipeableViews
+                axis={theme.direction === "rtl" ? "x-reverse" : "x"}
+                index={value}
+                onChangeIndex={handleChangeIndex}
+              >
+                <TabPanel value={value} index={0} dir={theme.direction}>
+                  <MyProfile name={name} email={email} role={role} />
+                </TabPanel>
+                <TabPanel value={value} index={1} dir={theme.direction}>
+                  <UpdateProfile
+                    name={updateName}
+                    email={updateEmail}
+                    funcSubmit={handleSubmit}
+                    funcName={setUpdateName}
+                    funcEmail={setUpdateEmail}
+                    funcPassword={setUpdatePassword}
+                  />
+                </TabPanel>
+              </SwipeableViews>
+              {fabs.map((fab, index) => (
+                <Zoom
+                  key={fab.color}
+                  in={value === index}
+                  timeout={transitionDuration}
+                  style={{
+                    transitionDelay: `${
+                      value === index ? transitionDuration.exit : 0
+                    }ms`,
+                  }}
+                  unmountOnExit
+                >
+                  <Fab
+                    sx={fab.sx}
+                    aria-label={fab.label}
+                    color={fab.color}
+                    onClick={() => handleChangeIndex(1)}
                   >
-                    <TabPanel value={value} index={0} dir={theme.direction}>
-                      <MyProfile name={name} email={email} role={role} />
-                    </TabPanel>
-                    <TabPanel value={value} index={1} dir={theme.direction}>
-                      <UpdateProfile
-                        name={updateName}
-                        email={updateEmail}
-                        funcSubmit={handleSubmit}
-                        funcName={setUpdateName}
-                        funcEmail={setUpdateEmail}
-                        funcPassword={setUpdatePassword}
-                      />
-                    </TabPanel>
-                  </SwipeableViews>
-                  {fabs.map((fab, index) => (
-                    <Zoom
-                      key={fab.color}
-                      in={value === index}
-                      timeout={transitionDuration}
-                      style={{
-                        transitionDelay: `${
-                          value === index ? transitionDuration.exit : 0
-                        }ms`,
-                      }}
-                      unmountOnExit
-                    >
-                      <Fab
-                        sx={fab.sx}
-                        aria-label={fab.label}
-                        color={fab.color}
-                        onClick={() => handleChangeIndex(1)}
-                      >
-                        {fab.icon}
-                      </Fab>
-                    </Zoom>
-                  ))}
-                </Box>
-              </Box>
-            </Container>
-          </React.Fragment>
-        </Fragment>
+                    {fab.icon}
+                  </Fab>
+                </Zoom>
+              ))}
+            </Box>
+          </Box>
+        </Container>
+      </React.Fragment>
+      </Fragment>
       )}
     </Fragment>
   );

@@ -4,8 +4,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
 const UpdateProfile = (props) => {
-    console.log("name:", props.name)
-    console.log("email:", props.email)
+  
   return (
     <Box
       component="form"

@@ -5,14 +5,24 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { FormControlLabel, IconButton } from "@mui/material";
 import { blue, red } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
-import { clearErrors, updateUser, deleteUser } from "../../actions/userAction";
+import {
+  clearErrors,
+  updateUser,
+  deleteUser,
+  getUserDetails,
+  loadUserAdmin,
+} from "../../actions/userAction";
 import { useAlert } from "react-alert";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 
 const MatEdit = ({ index }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const handleEditClick = () => {
+    dispatch(loadUserAdmin(index));
+
     navigate(`user/update/${index}`);
   };
 
@@ -35,18 +45,16 @@ const MatDelete = ({ index }) => {
   const dispatch = useDispatch();
   const alert = useAlert();
 
-  const { error, loading } = useSelector(
-    (state) => state.profile
-  );
+  const { error, loading } = useSelector((state) => state.profile);
 
-  console.log("loading:", loading)
-
+  console.log("loading:", loading);
 
   const handleEditClick = () => {
     console.log("delete index:", index);
     dispatch(deleteUser(index));
     if (!loading) {
-        alert.success("User deleted successfully")
+      alert.success("User deleted successfully");
+      // dispatch(getUserDetails());
     }
   };
 
@@ -55,7 +63,6 @@ const MatDelete = ({ index }) => {
       alert.error(error);
       dispatch(clearErrors);
     }
-
   }, [dispatch, error, alert, loading]);
 
   return (
@@ -73,7 +80,26 @@ const MatDelete = ({ index }) => {
   );
 };
 
-const UserList = ({ users }) => {
+const UserList = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { error, loading, users } = useSelector((state) => state.userDetails);
+
+  console.log("users:", users);
+
+  useEffect(() => {
+    if (error) {
+      alert.error(error);
+      dispatch(clearErrors);
+    }
+
+    dispatch(getUserDetails());
+
+    // if (isAuthenticated === false) {
+    //   navigate("/");
+    // }
+  }, [dispatch, error, navigate, alert]);
 
   const columns = [
     { field: "id", headerName: "ID", width: 90 },
@@ -135,7 +161,7 @@ const UserList = ({ users }) => {
     }));
   }
 
-  console.log("rows:", rows)
+  console.log("rows:", rows);
 
   return (
     <div style={{ height: 500, width: "60%" }}>
@@ -152,4 +178,3 @@ const UserList = ({ users }) => {
 };
 
 export default UserList;
-

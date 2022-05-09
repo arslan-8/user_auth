@@ -34,6 +34,9 @@ import {
   USER_DETAILS_REQUEST,
   USER_DETAILS_SUCCESS,
   USER_DETAILS_FAIL,
+  ADMIN_LOAD_USER_REQUEST,
+  ADMIN_LOAD_USER_SUCCESS,
+  ADMIN_LOAD_USER_FAIL,
   CLEAR_ERRORS,
 } from "../constants/userConstants";
 import axios from "axios";
@@ -163,8 +166,6 @@ export const getUserDetails = () => async (dispatch) => {
       "http://localhost:4000/api/v1/admin/users"
     );
 
-    console.log("data:", data);
-
     dispatch({ type: USER_DETAILS_SUCCESS, payload: data.users });
   } catch (error) {
     dispatch({ type: USER_DETAILS_FAIL, payload: error.response.data.message });
@@ -172,26 +173,50 @@ export const getUserDetails = () => async (dispatch) => {
 };
 
 // Update Profile
-export const updateProfile = (userData) => async (dispatch) => {
-  try {
-    dispatch({ type: UPDATE_PROFILE_REQUEST });
+export const updateProfile =
+  (updateName, updateEmail, updatePassword) => async (dispatch) => {
 
-    const config = { headers: { "Content-Type": "multipart/form-data" } };
+    console.log("action updateName:", updateName);
+    console.log("action updateEmail:", updateEmail);
+    console.log("action updatePassword:", updatePassword);
 
-    const { data } = await axios.put(
-      `http://localhost:4000/api/v1/me/update`,
-      userData,
-      config
-    );
+    try {
+      dispatch({ type: UPDATE_PROFILE_REQUEST });
 
-    dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: data.success });
-  } catch (error) {
-    dispatch({
-      type: UPDATE_PROFILE_FAIL,
-      payload: error.response.data.message,
-    });
-  }
-};
+      let dataBody = { updateName, updateEmail, updatePassword };
+
+      console.log('dataBody:', dataBody)
+
+      var config = {
+        method: "put",
+        url: "http://localhost:4000/api/v1/me/update",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: dataBody,
+      };
+
+      const data = await axios(config).then(function (response) {
+        console.log(JSON.stringify(response.data));
+        return response.data;
+      });
+
+      // const config = { headers: { "Content-Type": "application/json" } };
+
+      // const { data } = await axios.put(
+      //   "http://localhost:4000/api/v1/me/update",
+      //   { updateName, updateEmail, updatePassword },
+      //   config
+      // );
+
+      dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: data.success });
+    } catch (error) {
+      dispatch({
+        type: UPDATE_PROFILE_FAIL,
+        payload: error.response.data.message,
+      });
+    }
+  };
 
 // get All Users
 // export const getAllUsers = () => async (dispatch) => {
@@ -240,6 +265,24 @@ export const deleteUser = (id) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: DELETE_USER_FAIL,
+      payload: error.response.data.message,
+    });
+  }
+};
+
+// Load User Admin
+export const loadUserAdmin = (id) => async (dispatch) => {
+  try {
+    dispatch({ type: ADMIN_LOAD_USER_REQUEST });
+
+    const { data } = await axios.get(
+      `http://localhost:4000/api/v1/admin/user/${id}`
+    );
+
+    dispatch({ type: ADMIN_LOAD_USER_SUCCESS, payload: data.user });
+  } catch (error) {
+    dispatch({
+      type: ADMIN_LOAD_USER_FAIL,
       payload: error.response.data.message,
     });
   }

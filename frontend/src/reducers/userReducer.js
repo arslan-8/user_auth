@@ -38,6 +38,9 @@ import {
   UPDATE_PASSWORD_RESET,
   UPDATE_USER_RESET,
   DELETE_USER_RESET,
+  ADMIN_LOAD_USER_REQUEST,
+  ADMIN_LOAD_USER_SUCCESS,
+  ADMIN_LOAD_USER_FAIL,
   CLEAR_ERRORS,
 } from "../constants/userConstants";
 
@@ -46,6 +49,7 @@ export const userReducer = (state = { user: {} }, action) => {
     case LOGIN_REQUEST:
     case REGISTER_USER_REQUEST:
     case LOAD_USER_REQUEST:
+    case ADMIN_LOAD_USER_REQUEST:
       return {
         loading: true,
         isAuthenticated: false,
@@ -54,6 +58,7 @@ export const userReducer = (state = { user: {} }, action) => {
     case LOGIN_SUCCESS:
     case REGISTER_USER_SUCCESS:
     case LOAD_USER_SUCCESS:
+    case ADMIN_LOAD_USER_SUCCESS:
       return {
         ...state,
         loading: false,
@@ -78,7 +83,8 @@ export const userReducer = (state = { user: {} }, action) => {
         error: action.payload,
       };
 
-    case LOAD_USER_FAIL:
+   case LOAD_USER_FAIL:
+   case ADMIN_LOAD_USER_FAIL:
       return {
         loading: false,
         isAuthenticated: false,
@@ -90,6 +96,41 @@ export const userReducer = (state = { user: {} }, action) => {
       return {
         ...state,
         loading: false,
+        error: action.payload,
+      };
+
+    case CLEAR_ERRORS:
+      return {
+        ...state,
+        error: null,
+      };
+
+    default:
+      return state;
+  }
+};
+
+export const userAdminReducer = (state = { user: {} }, action) => {
+  switch (action.type) {
+    case ADMIN_LOAD_USER_REQUEST:
+      return {
+        loading: true,
+        isAuthenticated: false,
+      };
+
+    case ADMIN_LOAD_USER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        isAuthenticated: true,
+        user: action.payload,
+      };
+
+   case ADMIN_LOAD_USER_FAIL:
+      return {
+        loading: false,
+        isAuthenticated: false,
+        user: null,
         error: action.payload,
       };
 

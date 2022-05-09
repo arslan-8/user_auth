@@ -94,7 +94,7 @@ const SignUp = () => {
   const alert = useAlert();
   const navigate = useNavigate();
 
-  const { error, loading, isAuthenticated, user, data } = useSelector(
+  const { error, loading, isAuthenticated, user } = useSelector(
     (state) => state.user
   );
 
@@ -148,13 +148,10 @@ const SignUp = () => {
     }
   }, [dispatch, error, alert, navigate, isAuthenticated]);
 
-  if (!loading && isAuthenticated) {
+  if (isAuthenticated) {
     if (user) {
       navigate("/user");
     }
-    // else {
-    //   alert.error("User already exists with this email address");
-    // }
   }
 
   return (
